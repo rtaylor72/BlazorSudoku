@@ -1,0 +1,58 @@
+﻿@if (GameBoard == null || GameBoard.Size == 0)
+{
+    <p><em>Board not created yet</em></p>
+}
+else
+{
+    <table class="sudoku-table">
+        @for (byte row = 0; row < GameBoard.Size; row++)
+        {
+            <tr>
+                @for (byte column = 0; column < GameBoard.Size; column++)
+                {
+                    Cell cell = GameBoard[row, column];
+                    string cellValue = cell.Value == 0 ? "" : cell.Value.ToString();
+                    string style = "";
+                    @if (cell.CellDecoration == CellDecoration.ReadOnly)
+                    {
+                        style += "background-color:blue;color:white;";
+                    }
+
+                    if (row == 0)
+                    {
+                        style += "border-top:solid 5px #000;";
+                    }
+
+                    if (column == 0)
+                    {
+                        style += "border-left:solid 5px #000;";
+                    }
+
+                    if (((row + 1) % Math.Sqrt(GameBoard.Size)) == 0)
+                    {
+                        style += "border-bottom:solid 5px #000;";
+                    }
+                    else
+                    {
+                        style += "border-bottom:solid 1px #000;";
+                    }
+
+                    if (((column + 1) % Math.Sqrt(GameBoard.Size)) == 0)
+                    {
+                        style += "border-right:solid 5px #000;";
+                    }
+                    else
+                    {
+                        style += "border-right:solid 1px #000;";
+                    }
+
+                    <td class="sudoku-cell" style="@style">@cellValue</td>
+                }
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    [Parameter] public Board GameBoard { get; set; }
+}

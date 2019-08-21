@@ -1,0 +1,12 @@
+﻿.sudoku-table {
+    margin: 1em auto;
+    clear:both;
+    float:left;
+}
+
+.sudoku-cell {
+    height: 30px;
+    width: 30px;
+    border: 1px solid;
+    text-align: center;
+}

@@ -1,0 +1,182 @@
+﻿@page "/"
+
+<h1>Blazor Sudoku</h1>
+<hr />
+@if (_puzzleSizeOptions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row" style="padding-top:10px">
+        <div class="col-sm-3">
+            <label for="puzzle-size" class="control-label">Puzzle Size</label>
+            <select name="puzzle-size" class="form-control" value=@_currentPuzzleSize.PuzzleSize @onchange="SelectedPuzzleSizeChanged">
+                @foreach (var pso in _puzzleSizeOptions)
+                {
+                    {
+                        Console.WriteLine($"{_currentPuzzleSize.PuzzleSize}=={pso.PuzzleSize}");
+                    }
+                    <option value="@pso.PuzzleSize">@pso.PuzzleSizeText</option>
+                }
+            </select>
+            <input name="unique-answer" type="checkbox" value=@_isUnique @onchange="SelectedUniqueChanged" />
+            <label for="unique-answer" class="control-label">Unique Answer?</label>
+        </div>
+        <div class="col-sm-3">
+            <label for="cells-given" class="control-label">Cells Given</label>
+            <select name="cells-given" class="form-control" value=@_currentCellsGiven @onchange="SelectedCellsGivenChanged">
+                @{
+                    int minGivenCell = _isUnique ? _currentPuzzleSize.MinimumGivenCellsForUniqueAnswer : 1;
+                    for (int i = minGivenCell; i < _currentPuzzleSize.PuzzleSize * _currentPuzzleSize.PuzzleSize; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <input type="button" value="Generate!" style="bottom:0px;" @onclick="GenerateBoard" />
+        </div>
+    </div>
+
+    @if (_gameBoard != null)
+    {
+        <div class="row" style="padding-top:10px">
+            <div class="col-sm-9">
+                <BoardControl GameBoard="@_gameBoard"></BoardControl>
+            </div>
+        </div>
+        <div class="row" style="padding-top:10px">
+            <div class="col-sm-9">
+                @if (_solutions.Count == 0)
+                {
+                    <input type="button" value="Solve!" @onclick="SolveBoard" />
+                }
+                else if (_solutions.Count > 0)
+                {
+                    if (_solutionIndex >= 1)
+                    {
+                        <input type="button" value="<<<" @onclick="SolutionPrevious" />
+                    }
+                    string text = (_solutionIndex + 1) + " / " + _solutions.Count;
+                    @text
+                    if (_solutionIndex < _solutions.Count - 1)
+                    {
+                        <input type="button" value=">>>" @onclick="SolutionNext" />
+                    }
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private Board _gameBoard = null;
+    private List<UIPuzzleSize> _puzzleSizeOptions;
+    private UIPuzzleSize _currentPuzzleSize;
+    private int _currentCellsGiven;
+    private bool _isUnique = false;
+
+    private Collection<SolverSolution> _solutions = new Collection<SolverSolution>();
+    private int _solutionIndex = 0;
+
+    protected override void OnInitialized()
+    {
+        _puzzleSizeOptions = new List<UIPuzzleSize>() {
+            new UIPuzzleSize(4, 4),
+            new UIPuzzleSize(9, 17), //16 is possible, but very hard to find
+            new UIPuzzleSize(16, 57),
+        };
+
+        _currentPuzzleSize = _puzzleSizeOptions[1];
+
+        SelectedPuzzleSizeChanged(new UIChangeEventArgs() { Value = _currentPuzzleSize.PuzzleSize });
+    }
+
+    protected void SelectedPuzzleSizeChanged(UIChangeEventArgs eventArg)
+    {
+        byte selected = byte.Parse(eventArg.Value.ToString());
+        _currentPuzzleSize = _puzzleSizeOptions.First(x => x.PuzzleSize == selected);
+
+        int cellsGiven = _currentPuzzleSize.MinimumGivenCellsForUniqueAnswer;
+
+        Console.WriteLine("CellsGiven:" + cellsGiven);
+
+        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = cellsGiven });
+
+        this.StateHasChanged();
+    }
+
+    protected void SelectedUniqueChanged(UIChangeEventArgs eventArg)
+    {
+        string selected = eventArg.Value.ToString();
+        _isUnique = bool.Parse(selected);
+
+        int cellsGiven = _currentCellsGiven; // there is a bug here that select list is using index instead of value
+        Console.WriteLine("SelectedUniqueChanged, CellsGiven:" + cellsGiven);
+        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = 0 });
+        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = cellsGiven });
+
+        this.StateHasChanged();
+    }
+
+    protected void SelectedCellsGivenChanged(UIChangeEventArgs eventArg)
+    {
+        string selected = eventArg.Value.ToString();
+        _currentCellsGiven = int.Parse(selected);
+    }
+
+    protected void GenerateBoard()
+    {
+        _gameBoard = null;
+        _solutions = new Collection<SolverSolution>();
+
+        this.StateHasChanged();
+        
+        _gameBoard = Utility.CreateNewBoard(_currentPuzzleSize.PuzzleSize, _currentCellsGiven, _isUnique);
+
+        this.StateHasChanged();
+    }
+
+    protected void SolveBoard()
+    {
+        _solutions = Utility.SolveBoard(_gameBoard);
+
+        if (_solutions.Count > 0)
+        {
+            _solutionIndex = 0;
+            _gameBoard.FromArray(_solutions[_solutionIndex].Board);
+        }
+        else
+        {
+            _solutionIndex = -1;
+        }
+
+        this.StateHasChanged();
+    }
+
+    protected void SolutionPrevious()
+    {
+        if (_solutionIndex >= 1)
+        {
+            _solutionIndex--;
+        }
+
+        _gameBoard.FromArray(_solutions[_solutionIndex].Board);
+
+        this.StateHasChanged();
+    }
+
+    protected void SolutionNext()
+    {
+        if (_solutionIndex >= 0 && _solutionIndex < _solutions.Count - 1)
+        {
+            _solutionIndex++;
+        }
+
+        _gameBoard.FromArray(_solutions[_solutionIndex].Board);
+
+        this.StateHasChanged();
+    }
+}
