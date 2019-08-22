@@ -9,20 +9,11 @@ namespace BlazorSudoku.Solvers
         private int _steps = 0;
 
         #region ISolver Members
-        public virtual string Name
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public abstract string Name { get; }
 
-        public virtual string Description
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public abstract string Description { get; }
 
-        public virtual string Author
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public abstract string Author { get; }
 
         public virtual void Solve(ref ObservableCollection<SolverSolution> solutionList, byte[,] board, int maxSolutionsReturned)
         {
