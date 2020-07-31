@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@using System.Collections.ObjectModel;
+@page "/"
 
 <h1>Blazor Sudoku</h1>
 <hr />
@@ -91,10 +92,10 @@ else
 
         _currentPuzzleSize = _puzzleSizeOptions[1];
 
-        SelectedPuzzleSizeChanged(new UIChangeEventArgs() { Value = _currentPuzzleSize.PuzzleSize });
+        SelectedPuzzleSizeChanged(new ChangeEventArgs() { Value = _currentPuzzleSize.PuzzleSize });
     }
 
-    protected void SelectedPuzzleSizeChanged(UIChangeEventArgs eventArg)
+    protected void SelectedPuzzleSizeChanged(ChangeEventArgs eventArg)
     {
         byte selected = byte.Parse(eventArg.Value.ToString());
         _currentPuzzleSize = _puzzleSizeOptions.First(x => x.PuzzleSize == selected);
@@ -103,25 +104,25 @@ else
 
         Console.WriteLine("CellsGiven:" + cellsGiven);
 
-        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = cellsGiven });
+        SelectedCellsGivenChanged(new ChangeEventArgs() { Value = cellsGiven });
 
         this.StateHasChanged();
     }
 
-    protected void SelectedUniqueChanged(UIChangeEventArgs eventArg)
+    protected void SelectedUniqueChanged(ChangeEventArgs eventArg)
     {
         string selected = eventArg.Value.ToString();
         _isUnique = bool.Parse(selected);
 
         int cellsGiven = _currentCellsGiven; // there is a bug here that select list is using index instead of value
         Console.WriteLine("SelectedUniqueChanged, CellsGiven:" + cellsGiven);
-        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = 0 });
-        SelectedCellsGivenChanged(new UIChangeEventArgs() { Value = cellsGiven });
+        SelectedCellsGivenChanged(new ChangeEventArgs() { Value = 0 });
+        SelectedCellsGivenChanged(new ChangeEventArgs() { Value = cellsGiven });
 
         this.StateHasChanged();
     }
 
-    protected void SelectedCellsGivenChanged(UIChangeEventArgs eventArg)
+    protected void SelectedCellsGivenChanged(ChangeEventArgs eventArg)
     {
         string selected = eventArg.Value.ToString();
         _currentCellsGiven = int.Parse(selected);
@@ -133,7 +134,7 @@ else
         _solutions = new Collection<SolverSolution>();
 
         this.StateHasChanged();
-        
+
         _gameBoard = Utility.CreateNewBoard(_currentPuzzleSize.PuzzleSize, _currentCellsGiven, _isUnique);
 
         this.StateHasChanged();
